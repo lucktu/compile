@@ -1,8 +1,9 @@
+## 此文件由 lmq8267 编写
 name: 编译群晖ds213j_vnt-cli
 
 on:
-  schedule:
-    - cron: '0 3 * * *'
+  #schedule:
+  #  - cron: '0 3 * * *'
   workflow_dispatch:
 env:
   TZ: Asia/Shanghai
@@ -52,19 +53,12 @@ jobs:
           cargo build --package vnt-cli --target=armv7-unknown-linux-gnueabihf --release --features openssl-vendored
           echo "build_time=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
       - 
-        name: 发布
-        uses: softprops/action-gh-release@v1
+        name : Upload packages
+        uses: actions/upload-artifact@master
+        if: always()
         with:
-          token: ${{ secrets.compile_231005 }}
-          body: |
-           > ### 编译时间 ：${{ env.build_time }}
-           
-           **适用于群晖ds213j**
-           
-           **[官方更新说明](https://github.com/lbl8603/vnt/releases)**
-          tag_name: vnt-cli_${{ needs.check.outputs.ver }}
-          files: |
-              /opt/vnt/target/armv7-unknown-linux-gnueabihf/release/vnt-cli
+         name: vnt-cli
+         path: /opt/vnt/target/armv7-unknown-linux-gnueabihf/release/vnt-cli
       - 
        name: 删除工作流
        uses: GitRML/delete-workflow-runs@main
