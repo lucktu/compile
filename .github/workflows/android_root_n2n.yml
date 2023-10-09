@@ -1,0 +1,103 @@
+name: 编译root后的手机用n2n主程序
+## 此文件由 lmq8267 于 2023-10-08 编写（未测试通过，也许是他的模拟器不行，待进一步验证）
+
+on:
+  #schedule:
+    #- cron: '0 3,20 * * *'
+  workflow_dispatch:
+env:
+  TZ: Asia/Shanghai
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Install cross compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+            binutils-arm-linux-gnueabi \
+            gcc-arm-linux-gnueabi
+      - 
+        name: 构建openssl依赖
+        shell: bash
+        run: |
+          wget -c http://www.zlib.net/zlib-1.3.tar.gz -P /opt/ssl/
+          tar zxf /opt/ssl/zlib-1.3.tar.gz -C /opt/ssl/
+          cd /opt/ssl/zlib-1.3
+          CC=arm-linux-gnueabi-gcc \
+          AR=arm-linux-gnueabi-ar \
+          LDFLAGS="-L/usr/arm-linux-gnueabi/lib -Wl,--gc-sections" \
+          CFLAGS="-I /usr/arm-linux-gnueabi/include -Os -ffunction-sections -fdata-sections -D_GNU_SOURCE -D_BSD_SOURCE -fPIE" \
+          CPPFLAGS="-I /usr/arm-linux-gnueabi/include" \
+          CXXFLAGS="-I /usr/arm-linux-gnueabi/include -Os -ffunction-sections -fdata-sections -D_GNU_SOURCE -D_BSD_SOURCE -fPIE" \
+          CROSS_PREFIX="arm-linux-gnu-" \
+          ./configure \
+          --prefix=/opt \
+          --static
+          make -j$(nproc)
+          make install
+          sudo mkdir -p /usr/arm-linux-gnueabi/lib/pkgconfig
+          sudo mkdir -p /usr/arm-linux-gnueabi/share/man/man3
+          sudo cp -f /opt/lib/libz.a /usr/arm-linux-gnueabi/lib/libz.a
+          sudo cp -f /opt/lib/pkgconfig/zlib.pc /usr/arm-linux-gnueabi/lib/pkgconfig/zlib.pc
+          sudo cp -f /opt/include/zlib.h /usr/arm-linux-gnueabi/include/zlib.h
+          sudo cp -f /opt/include/zconf.h /usr/arm-linux-gnueabi/include/zconf.h
+          sudo cp -f /opt/share/man/man3/zlib.3 /usr/arm-linux-gnueabi/share/man/man3/zlib.3
+          wget -c https://www.openssl.org/source/openssl-1.1.1w.tar.gz -P /opt/ssl/
+          tar zxf /opt/ssl/openssl-1.1.1w.tar.gz -C /opt/ssl/
+          wget -c http://mirrors.xmu.edu.cn/gentoo/distfiles/c8/cryptodev-linux-1.12.tar.gz -P /opt/ssl/
+          tar zxf /opt/ssl/cryptodev-linux-1.12.tar.gz -C /opt/ssl/
+          sudo cp -f /opt/ssl/cryptodev-linux-cryptodev-linux-1.12/crypto/cryptodev.h /usr/arm-linux-gnueabi/include/cryptodev.h
+          cd /opt/ssl/openssl-1.1.1w
+          CC=arm-linux-gnueabi-gcc \
+          ./Configure linux-armv4 -static --prefix=/opt zlib enable-rc5 enable-ssl3 enable-ssl3-method enable-tls1_3 --with-zlib-lib=/usr/arm-linux-gnueabi/lib --with-zlib-include=/usr/arm-linux-gnueabi/include -DOPENSSL_PREFER_CHACHA_OVER_GCM enable-weak-ssl-ciphers no-ssl2 no-gost no-heartbeats no-err no-unit-test no-aria no-sm2 no-sm3 no-sm4 no-tests no-shared no-afalgeng no-async \
+          --cross-compile-prefix=' '
+          make -j$(nproc)
+          make install INSTALLTOP=/opt OPENSSLDIR=/opt
+          sudo cp -f /opt/bin/openssl /usr/arm-linux-gnueabi/bin/openssl
+          sudo cp -rf /opt/include/openssl/ /usr/arm-linux-gnueabi/include/openssl/
+          sudo cp -f /opt/lib/libcrypto.a /usr/arm-linux-gnueabi/lib/libcrypto.a
+          sudo cp -f /opt/lib/libssl.a /usr/arm-linux-gnueabi/lib/libssl.a
+      -  
+        name: 编译n2n
+        shell: bash
+        run: |
+          #lucktu-2.8.2
+          git clone https://github.com/lucktu/cnn2n /opt/n2n
+          #修改读取随机数
+          #git clone https://github.com/lmq8267/cnn2n.git /opt/n2n
+          cd /opt/n2n
+          sed -i 's|/dev/net/tun|/dev/tun|g' ./src/tuntap_linux.c
+          sed -i 's|-Wshadow|-Wshadow -static |g' ./CMakeLists.txt
+          sed -i '/# N2n release information/i set(CMAKE_SYSTEM_NAME Linux)' ./CMakeLists.txt
+          sed -i '/# N2n release information/i set(CMAKE_SYSTEM_PROCESSOR arm)' ./CMakeLists.txt
+          sed -i '/# N2n release information/i set(CMAKE_C_COMPILER /usr/bin/arm-linux-gnueabi-gcc)' ./CMakeLists.txt
+          sed -i '/# N2n release information/i set(CMAKE_CXX_COMPILER /usr/bin/arm-linux-gnueabi-g++)' ./CMakeLists.txt
+          sed -i '/# N2n release information/i set(CMAKE_CXX_FLAGS "${CMAKE_CXX_LINKER_FLAGS} -static")' ./CMakeLists.txt
+          sed -i '/# N2n release information/i set(CMAKE_CXE_LINKER_FLAGS "${CMAKE_CEXE_LINKER_FLAGS} -static")' ./CMakeLists.txt
+          cat ./CMakeLists.txt
+          cmake . .
+          make
+        continue-on-error: true
+      - 
+        name: 剥离
+        run: |
+          cd /opt/n2n
+          #剥离
+          #/usr/bin/arm-linux-gnueabi-strip edge
+          #打包zip
+          zip n2n_v2_lucktu_cnn2n_new2.zip edge supernode
+          #查看二进制文件属性
+          strings edge | grep /dev 
+          file edge 
+      - name : 上传
+        uses: actions/upload-artifact@master
+        if: always()
+        with:
+         name: android_n2n
+         path: |
+           /opt/n2n/n2n_v2_lucktu_cnn2n_new2.zip
