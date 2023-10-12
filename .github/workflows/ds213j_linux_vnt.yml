@@ -37,7 +37,7 @@ jobs:
         name: 编译
         run: |
           mkdir -p /opt/musl_gcc 
-          wget -c https://github.com/lucktu/compile/releases/download/ds213j/armada370-gcc493_glibc220_hard-GPL.txz -P /opt/musl_gcc/
+          wget -c https://github.com/lucktu/compile/releases/download/toolchain/armada370-gcc493_glibc220_hard-GPL.txz -P /opt/musl_gcc/
           tar -Jxvf /opt/musl_gcc/armada370-gcc493_glibc220_hard-GPL.txz -C /opt/musl_gcc/
           rustup target add armv7-unknown-linux-gnueabihf
           export PATH=$PATH:/opt/musl_gcc/arm-unknown-linux-gnueabi/bin
