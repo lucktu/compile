@@ -1,16 +1,14 @@
 name: 编译root后的手机用n2n主程序
-## 此文件由 lmq8267 于 2023-10-08 编写（未测试通过，也许是他的模拟器不行，待进一步验证）
+## 此文件由 lmq8267 于 2023-10-08 编写（未测试通过，也许是他的安卓模拟器不行，待进一步验证）
 
 on:
-  #schedule:
-    #- cron: '0 3,20 * * *'
   workflow_dispatch:
 env:
   TZ: Asia/Shanghai
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
         with:
@@ -27,58 +25,73 @@ jobs:
         run: |
           wget -c http://www.zlib.net/zlib-1.3.tar.gz -P /opt/ssl/
           tar zxf /opt/ssl/zlib-1.3.tar.gz -C /opt/ssl/
+          wget -c https://github.com/lmq8267/vnt-cli/releases/download/Armada370-ToolChain/arm-linux-gcc-4.4.3-20100728.tar.gz -P /opt/ssl/
+          tar zxf /opt/ssl/arm-linux-gcc-4.4.3-20100728.tar.gz -C /opt/ssl/
+          sudo chmod 777 -R /opt/ssl/opt/FriendlyARM
+          export PATH=$PATH:/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/bin
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib
           cd /opt/ssl/zlib-1.3
-          CC=arm-linux-gnueabi-gcc \
-          AR=arm-linux-gnueabi-ar \
-          LDFLAGS="-L/usr/arm-linux-gnueabi/lib -Wl,--gc-sections" \
-          CFLAGS="-I /usr/arm-linux-gnueabi/include -Os -ffunction-sections -fdata-sections -D_GNU_SOURCE -D_BSD_SOURCE -fPIE" \
-          CPPFLAGS="-I /usr/arm-linux-gnueabi/include" \
-          CXXFLAGS="-I /usr/arm-linux-gnueabi/include -Os -ffunction-sections -fdata-sections -D_GNU_SOURCE -D_BSD_SOURCE -fPIE" \
-          CROSS_PREFIX="arm-linux-gnu-" \
+          arm-linux-gcc -v
+          CC=arm-linux-gcc \
+          AR=arm-linux-ar \
+          LDFLAGS="-L/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib -Wl,--gc-sections" \
+          CFLAGS="-I /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include -Os -ffunction-sections -fdata-sections -D_GNU_SOURCE -D_BSD_SOURCE -fPIE" \
+          CPPFLAGS="-I /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include" \
+          CXXFLAGS="-I /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include -Os -ffunction-sections -fdata-sections -D_GNU_SOURCE -D_BSD_SOURCE -fPIE" \
+          CROSS_PREFIX="arm-linux-" \
           ./configure \
           --prefix=/opt \
           --static
           make -j$(nproc)
           make install
-          sudo mkdir -p /usr/arm-linux-gnueabi/lib/pkgconfig
-          sudo mkdir -p /usr/arm-linux-gnueabi/share/man/man3
-          sudo cp -f /opt/lib/libz.a /usr/arm-linux-gnueabi/lib/libz.a
-          sudo cp -f /opt/lib/pkgconfig/zlib.pc /usr/arm-linux-gnueabi/lib/pkgconfig/zlib.pc
-          sudo cp -f /opt/include/zlib.h /usr/arm-linux-gnueabi/include/zlib.h
-          sudo cp -f /opt/include/zconf.h /usr/arm-linux-gnueabi/include/zconf.h
-          sudo cp -f /opt/share/man/man3/zlib.3 /usr/arm-linux-gnueabi/share/man/man3/zlib.3
+          mkdir -p /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib/pkgconfig
+          cp -rf /opt/lib/libz.a /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib/libz.a
+          cp -rf /opt/lib/pkgconfig/zlib.pc /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib/pkgconfig/zlib.pc
+          cp -rf /opt/include/zlib.h /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include/zlib.h
+          cp -rf /opt/include/zconf.h /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include/zconf.h
+          cp -rf /opt/share/man/man3/zlib.3 /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/share/man/man3/zlib.3
           wget -c https://www.openssl.org/source/openssl-1.1.1w.tar.gz -P /opt/ssl/
           tar zxf /opt/ssl/openssl-1.1.1w.tar.gz -C /opt/ssl/
           wget -c http://mirrors.xmu.edu.cn/gentoo/distfiles/c8/cryptodev-linux-1.12.tar.gz -P /opt/ssl/
           tar zxf /opt/ssl/cryptodev-linux-1.12.tar.gz -C /opt/ssl/
-          sudo cp -f /opt/ssl/cryptodev-linux-cryptodev-linux-1.12/crypto/cryptodev.h /usr/arm-linux-gnueabi/include/cryptodev.h
+          cp -rf /opt/ssl/cryptodev-linux-cryptodev-linux-1.12/crypto/cryptodev.h /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include/cryptodev.h
           cd /opt/ssl/openssl-1.1.1w
-          CC=arm-linux-gnueabi-gcc \
-          ./Configure linux-armv4 -static --prefix=/opt zlib enable-rc5 enable-ssl3 enable-ssl3-method enable-tls1_3 --with-zlib-lib=/usr/arm-linux-gnueabi/lib --with-zlib-include=/usr/arm-linux-gnueabi/include -DOPENSSL_PREFER_CHACHA_OVER_GCM enable-weak-ssl-ciphers no-ssl2 no-gost no-heartbeats no-err no-unit-test no-aria no-sm2 no-sm3 no-sm4 no-tests no-shared no-afalgeng no-async \
+          CC=arm-linux-gcc \
+          ./Configure linux-armv4 -static --prefix=/opt zlib enable-rc5 enable-ssl3 enable-ssl3-method enable-tls1_3 --with-zlib-lib=/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib --with-zlib-include=/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include -DOPENSSL_PREFER_CHACHA_OVER_GCM enable-weak-ssl-ciphers no-ssl2 no-gost no-heartbeats no-err no-unit-test no-aria no-sm2 no-sm3 no-sm4 no-tests no-shared no-afalgeng no-async \
           --cross-compile-prefix=' '
           make -j$(nproc)
           make install INSTALLTOP=/opt OPENSSLDIR=/opt
-          sudo cp -f /opt/bin/openssl /usr/arm-linux-gnueabi/bin/openssl
-          sudo cp -rf /opt/include/openssl/ /usr/arm-linux-gnueabi/include/openssl/
-          sudo cp -f /opt/lib/libcrypto.a /usr/arm-linux-gnueabi/lib/libcrypto.a
-          sudo cp -f /opt/lib/libssl.a /usr/arm-linux-gnueabi/lib/libssl.a
+          cp -rf /opt/bin/openssl /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/bin/openssl
+          cp -rf /opt/include/openssl/ /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include/openssl/
+          cp -rf /opt/lib/libcrypto.a /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib/libcrypto.a
+          cp -rf /opt/lib/libssl.a /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib/libssl.a
+          cd /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include
+          ls
+          cd /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib
+          ls
       -  
         name: 编译n2n
         shell: bash
         run: |
           #lucktu-2.8.2
           git clone https://github.com/lucktu/cnn2n /opt/n2n
+          #官方原版2.8.0
+          #git clone https://github.com/ntop/n2n -b 2.8-stable /opt/n2n
           #修改读取随机数
           #git clone https://github.com/lmq8267/cnn2n.git /opt/n2n
           cd /opt/n2n
+          export PATH=$PATH:/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/bin
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib
           sed -i 's|/dev/net/tun|/dev/tun|g' ./src/tuntap_linux.c
-          sed -i 's|-Wshadow|-Wshadow -static |g' ./CMakeLists.txt
+          sed -i 's|-Wshadow|-L/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib -Wshadow -static |g' ./CMakeLists.txt
+          arm-linux-gcc -v
+          cp -rf /opt/include/openssl/ /opt/n2n/include/openssl/
           sed -i '/# N2n release information/i set(CMAKE_SYSTEM_NAME Linux)' ./CMakeLists.txt
           sed -i '/# N2n release information/i set(CMAKE_SYSTEM_PROCESSOR arm)' ./CMakeLists.txt
-          sed -i '/# N2n release information/i set(CMAKE_C_COMPILER /usr/bin/arm-linux-gnueabi-gcc)' ./CMakeLists.txt
-          sed -i '/# N2n release information/i set(CMAKE_CXX_COMPILER /usr/bin/arm-linux-gnueabi-g++)' ./CMakeLists.txt
-          sed -i '/# N2n release information/i set(CMAKE_CXX_FLAGS "${CMAKE_CXX_LINKER_FLAGS} -static")' ./CMakeLists.txt
-          sed -i '/# N2n release information/i set(CMAKE_CXE_LINKER_FLAGS "${CMAKE_CEXE_LINKER_FLAGS} -static")' ./CMakeLists.txt
+          sed -i '/# N2n release information/i set(CMAKE_C_COMPILER /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/bin/arm-linux-gcc)' ./CMakeLists.txt
+          sed -i '/# N2n release information/i set(CMAKE_CXX_COMPILER /opt/ssl/opt/FriendlyARM/toolschain/4.4.3/bin/arm-linux-g++)' ./CMakeLists.txt
+          sed -i '/# N2n release information/i set(CMAKE_CXX_FLAGS "${CMAKE_CXX_LINKER_FLAGS} -I/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include -static -L/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib")' ./CMakeLists.txt
+          sed -i '/# N2n release information/i set(CMAKE_CXE_LINKER_FLAGS "${CMAKE_CEXE_LINKER_FLAGS} -I/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/include -static -L/opt/ssl/opt/FriendlyARM/toolschain/4.4.3/lib")' ./CMakeLists.txt
           cat ./CMakeLists.txt
           cmake . .
           make
