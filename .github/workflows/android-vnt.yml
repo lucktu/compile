@@ -20,15 +20,20 @@ jobs:
          #bash ./gradlew assembleDebug --stacktrace
          sed -i 's|7.2|6.9|g' ./gradle/wrapper/gradle-wrapper.properties
          #echo "org.gradle.warning.mode=all" >>/opt/vnt-android/gradle.properties
-         bash ./gradlew assembleRelease
+         #bash ./gradlew assembleRelease
+         bash ./gradlew assemble
       - name: vnt
         run: |
-         find /opt/vnt-android/ -name  "apk"
-         cd /opt/vnt-android/app/build/outputs/apk/release
-         du -k app-release-unsigned.apk
+         #find /opt/vnt-android/ -name  "apk"
+         #cd /opt/vnt-android/app/build/outputs/apk/release
+         #du -k app-release-unsigned.apk
+         mkdir /opt/vnt-android/app2
+         mv /opt/vnt-android/app/build/outputs/apk/debug/app-debug.apk /opt/vnt-android/app2/vnt-debug.apk
+         mv /opt/vnt-android/app/build/outputs/apk/preview/app-preview-unsigned.apk /opt/vnt-android/app2/vnt-preview-unsigned.apk
+         mv /opt/vnt-android/app/build/outputs/apk/release/app-release-unsigned.apk /opt/vnt-android/app2/vnt-release-unsigned.apk
       - name : 上传
         uses: actions/upload-artifact@master
         if: always()
         with:
          name: vnt_for_android
-         path: /opt/vnt-android/app/build/outputs/apk/release/app-release-unsigned.apk
+         path: /opt/vnt-android/app2/*
