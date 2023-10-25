@@ -1,0 +1,88 @@
+name: 编译android二进制n2n
+
+on:
+   workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: 下载NDK
+        run: |
+         mkdir -p /opt/gcc
+         #下载r14b版本的NDK 其他版本下载：https://github.com/android/ndk/wiki/Unsupported-Downloads
+         wget -q -c https://dl.google.com/android/repository/android-ndk-r14b-linux-x86_64.zip -P /opt/gcc/
+         unzip -q /opt/gcc/android-ndk-r14b-linux-x86_64.zip -d /opt/gcc/
+         
+         #列出当前NDK版本里所有支持的API版本，对应关系参考：https://www.codenong.com/cs109334954/ 或 http://t.csdnimg.cn/10Z1P
+         cd /opt/gcc/android-ndk-r14b/platforms
+         ls
+         
+      - name: 构建openssl
+        run: | 
+         #编译安卓的openssl依赖1.1.1w版本
+         git clone https://github.com/openssl/openssl -b OpenSSL_1_1_1w /opt/openssl
+         cd /opt/openssl
+         
+         #安卓编译openssl方法参考https://github.com/openssl/openssl/blob/master/NOTES-ANDROID.md或https://github.com/leenjewel/openssl_for_ios_and_android
+         export ANDROID_NDK_ROOT=/opt/gcc/android-ndk-r14b
+         export ANDROID_NDK_HOME=/opt/gcc/android-ndk-r14b
+         export PATH=$PATH:$ANDROID_NDK_HOME/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin
+         
+         #编译arm的安卓 API版本14 对应安卓版本4.0
+         ./Configure android-arm -D__ANDROID_API__=14
+         make
+         make install INSTALLTOP=/opt/OpenSSL OPENSSLDIR=/opt/OpenSSL/ssl
+         
+      - name: 编译n2n
+        run: |  
+         git clone https://github.com/lucktu/cnn2n /opt/n2n
+         mkdir -p /opt/n2n/build
+         cd /opt/n2n/build
+         
+         #去掉旧版编译器不存在的编译选项
+         sed -i 's|-fno-integrated-as| |g' /opt/gcc/android-ndk-r14b/build/cmake/android.toolchain.cmake
+         sed -i 's|-Qunused-arguments| |g' /opt/gcc/android-ndk-r14b/build/cmake/android.toolchain.cmake
+         
+         #添加未生效的MAX MIN定义
+         sed -i '/#ifndef _N2N_H_/i #define MAX(a,b) (a > b ? a : b)' /opt/n2n/include/n2n.h
+         sed -i '/#ifndef _N2N_H_/i #define MIN(a,b) (a < b ? a : b)' /opt/n2n/include/n2n.h
+
+         #修改安卓手机的tun模块位置
+         sed -i 's|/dev/net/tun|/dev/tun|g' /opt/n2n/src/tuntap_linux.c
+         
+         #设置openssl为静态库，安卓无法用本机ssl库，添加一些库以及为安卓5.0版本以上添加-fPIE -pie选项
+         sed -i 's|-Wall|-lm -lc -lz -landroid -lstdc++ -fPIE -pie -I/opt/OpenSSL/include -L/opt/OpenSSL/lib -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic -Wall|g' /opt/n2n/CMakeLists.txt
+         sudo apt-get install libncurses5
+         
+         #设置NDK路径 DANDROID_PLATFORM=和DCMAKE_SYSTEM_VERSION=保持一致
+         cmake \
+         -DCMAKE_TOOLCHAIN_FILE=/opt/gcc/android-ndk-r14b/build/cmake/android.toolchain.cmake \
+         -DOPENSSL_ROOT_DIR=/opt/OpenSSL \
+         -DOPENSSL_LIBRARIES=/opt/OpenSSL/lib \
+         -DOPENSSL_INCLUDE_DIR=/opt/OpenSSL/include \
+         -DANDROID_PLATFORM=android-14 \
+         -DCMAKE_SYSTEM_NAME=Android \
+         -DCMAKE_SYSTEM_VERSION=14 \
+         -DANDROID_ABI=armeabi \
+         -DANDROID_NDK=/opt/gcc/android-ndk-r14b ..
+         #可以设置clang为编译器，默认gcc
+         #-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=clang
+
+         #安卓编译二进制文件参考：https://github.com/294797392/294797392.github.io/wiki/使用CMake编译生成安卓原生程序
+         make
+         
+         #查看文件属性以及依赖的库
+         file edge
+         readelf -d edge
+         du -k edge
+         #打包n2n所有程序
+         zip n2n-Android.zip edge example_edge_embed example_edge_embed_quick_edge_init example_sn_embed supernode n2n-benchmark
+         
+      - name : 上传
+        uses: actions/upload-artifact@master
+        if: always()
+        with:
+         name: n2n-android
+         path: /opt/n2n/build/n2n-Android.zip
