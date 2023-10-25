@@ -1,5 +1,5 @@
 ## 该程序由 lmq8267 编写
-name: 编译vnt_for_android
+name: 编译vnt-cli_for_android
 
 on:
    workflow_dispatch:

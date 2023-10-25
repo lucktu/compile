@@ -1,4 +1,4 @@
-name: 编译x86-64-linux_vnt-cli
+name: 编译vnt-cli_for_x86-64-linux
 
 on:
   workflow_dispatch:

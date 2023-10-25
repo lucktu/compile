@@ -1,6 +1,6 @@
 ## 此文件由 lmq8267 编写
 ## 查看支持列表: rustc --print target-list
-name: 编译群晖ds213j_vnt-cli
+name: 编译vnt-cli_for_群晖ds213j
 
 on:
   #schedule:

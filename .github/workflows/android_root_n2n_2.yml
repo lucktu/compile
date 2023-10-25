@@ -1,4 +1,5 @@
-name: 编译android二进制n2n
+name: 编译n2n_v2_for_root_android_2 (用安卓官方编译器)
+## 此文件由 lmq8267 于 2023-10-25 编写
 
 on:
    workflow_dispatch:
@@ -78,11 +79,18 @@ jobs:
          readelf -d edge
          du -k edge
          #打包n2n所有程序
-         zip n2n-Android.zip edge example_edge_embed example_edge_embed_quick_edge_init example_sn_embed supernode n2n-benchmark
-         
+         #zip n2n-Android.zip edge example_edge_embed example_edge_embed_quick_edge_init example_sn_embed supernode n2n-benchmark
+         mkdir /opt/n2n/build2
+         mv edge /opt/n2n/build2/edge
+         mv supernode /opt/n2n/build2/supernode
+         mv example_edge_embed /opt/n2n/build2/example_edge_embed
+         mv example_edge_embed_quick_edge_init /opt/n2n/build2/example_edge_embed_quick_edge_init
+         mv example_sn_embed /opt/n2n/build2/example_sn_embed
+         mv n2n-benchmark /opt/n2n/build2/n2n-benchmark
+
       - name : 上传
         uses: actions/upload-artifact@master
         if: always()
         with:
-         name: n2n-android
-         path: /opt/n2n/build/n2n-Android.zip
+         name: android_n2n_v2
+         path: /opt/n2n/build2/*
