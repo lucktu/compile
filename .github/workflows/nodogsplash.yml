@@ -172,6 +172,9 @@ jobs:
         TAG: ${{ env.tag }}
         TARGET: ${{ matrix.target }}
        run: |
+         # 禁用不支持musl的 TFO 或自动检测
+         sed -i 's/MHD_USE_EPOLL_INTERNALLY | MHD_USE_TCP_FASTOPEN,/MHD_USE_EPOLL_INTERNALLY,/g' src/main.c
+         cat src/main.c
          export CROSS_COMPILE=${URL}-
          make nodogsplash
          make ndsctl
@@ -218,9 +221,9 @@ jobs:
           body: |
            > ### ![](https://img.shields.io/badge/%E7%BC%96%E8%AF%91%E6%97%B6%E9%97%B4-${{ env.build_time }}-nodogsplash?logo=github&labelColor=%E9%A1%BB)![](https://img.shields.io/github/downloads/${{ github.repository }}/${{env.tag}}/total?label=%E4%B8%8B%E8%BD%BD%E6%AC%A1%E6%95%B0&logo=github)
            
-           [提交记录](https://github.com/${{ github.repository }}/tree/${{ env.haxi }})
+           [提交记录](https://github.com/nodogsplash/nodogsplash/tree/${{ env.haxi }})
            
-           [官方源码](https://github.com/lucktu/nodogsplash)
+           [官方源码](https://github.com/nodogsplash/nodogsplash)
            
           tag_name: ${{env.tag}}
           files: /opt/nodogsplash-${{ matrix.target }}.zip
@@ -235,4 +238,3 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           retain_days: 0
           keep_minimum_runs: 0
-        
