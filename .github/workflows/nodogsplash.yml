@@ -1,3 +1,4 @@
+
 name: 编译nodogsplash
 
 on:
@@ -87,7 +88,7 @@ jobs:
      - name: Checkout code
        uses: actions/checkout@v4
        with:
-        repository: nodogsplash/nodogsplash
+        repository: lucktu/nodogsplash
         ref: ${{ env.branch }}
         
      - name: 下载linux-musl-gcc
