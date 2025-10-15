@@ -227,6 +227,7 @@ jobs:
            
           tag_name: ${{env.tag}}
           files: /opt/nodogsplash-${{ matrix.target }}.zip
+          overwrite_files: ture
 
   del:
     runs-on: ubuntu-latest
