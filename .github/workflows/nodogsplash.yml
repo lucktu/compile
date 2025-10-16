@@ -121,7 +121,7 @@ jobs:
          TARGET: ${{ matrix.target }}
          URL: ${{ matrix.URL }}
        run: |
-         if [ ! -d "/opt/microhttpd-${URL}" ] || [ -z "$(find /opt/microhttpd-${URL}/lib -name '*.a' 2>/dev/null)" ] ; then
+         #if [ ! -d "/opt/microhttpd-${URL}" ] || [ -z "$(find /opt/microhttpd-${URL}/lib -name '*.a' 2>/dev/null)" ] ; then
             wget https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.77.tar.gz
             tar xf libmicrohttpd-0.9.77.tar.gz
             cd libmicrohttpd-0.9.77
@@ -136,9 +136,9 @@ jobs:
               --prefix=/opt/microhttpd-${URL}
             make -j$(nproc)
             make install
-         else
-          echo "✅ microhttpd 静态库已缓存，跳过编译"
-         fi
+         #else
+          #echo "✅ microhttpd 静态库已缓存，跳过编译"
+         #fi
      - name: 缓存 json-c 库
        id: cache-jsonc
        uses: actions/cache@v4
