@@ -127,8 +127,8 @@ jobs:
             echo "###########################编译microhttpd依赖库########################"
             ./configure \
               --host=mipsel-linux-musl \
-              --disable-shared \
-              --enable-static \
+              --enable-shared \
+              --disable-static \
               --without-gnutls \
               --without-libgcrypt \
               --without-openssl \
