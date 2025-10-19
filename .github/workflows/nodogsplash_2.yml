@@ -121,9 +121,9 @@ jobs:
          URL: ${{ matrix.URL }}
        run: |
          if [ ! -d "/opt/microhttpd-${URL}" ] || [ -z "$(find /opt/microhttpd-${URL}/lib -name '*.a' 2>/dev/null)" ] ; then
-            wget https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.77.tar.gz
-            tar xf libmicrohttpd-0.9.77.tar.gz
-            cd libmicrohttpd-0.9.77
+            wget https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.33.tar.gz
+            tar xf libmicrohttpd-0.9.33.tar.gz
+            cd libmicrohttpd-0.9.33
             echo "###########################编译microhttpd依赖库########################"
             ./configure \
               --host=mipsel-linux-musl \
