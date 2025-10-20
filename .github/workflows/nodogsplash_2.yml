@@ -109,12 +109,12 @@ jobs:
          echo "LDFLAGS=$LDFLAGS" >> $GITHUB_ENV
 
      - name: 缓存 microhttpd 库
-       id: cache-microhttpd
-       uses: actions/cache@v4
-       with:
-        path: |
-          /opt/microhttpd-${{ matrix.URL }}
-        key: microhttpd-${{ matrix.URL }}-cache
+     -  id: cache-microhttpd
+      - uses: actions/cache@v4
+     -  with:
+      -  path: |
+      -    /opt/microhttpd-${{ matrix.URL }}
+      -  key: microhttpd-${{ matrix.URL }}-cache
      - name: 编译 microhttpd 库
        env:
          TARGET: ${{ matrix.target }}
@@ -173,8 +173,8 @@ jobs:
         TARGET: ${{ matrix.target }}
        run: |
          # 禁用不支持musl的 TFO 或自动检测
-         -sed -i 's/MHD_USE_EPOLL_INTERNALLY | MHD_USE_TCP_FASTOPEN,/MHD_USE_EPOLL_INTERNALLY,/g' src/main.c
-         -cat src/main.c
+        - sed -i 's/MHD_USE_EPOLL_INTERNALLY | MHD_USE_TCP_FASTOPEN,/MHD_USE_EPOLL_INTERNALLY,/g' src/main.c
+        - cat src/main.c
          export CROSS_COMPILE=${URL}-
          make nodogsplash
          make ndsctl
