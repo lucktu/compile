@@ -87,7 +87,7 @@ jobs:
      - name: Checkout code
        uses: actions/checkout@v4
        with:
-        repository: nodogsplash/nodogsplash
+        repository: lucktu/nodogsplash
         ref: ${{ env.branch }}
         
      - name: 下载linux-musl-gcc
@@ -223,7 +223,7 @@ jobs:
            
            [提交记录](https://github.com/nodogsplash/nodogsplash/tree/${{ env.haxi }})
            
-           [官方源码](https://github.com/nodogsplash/nodogsplash)
+           [官方源码](https://github.com/lucktu/nodogsplash)
            
           tag_name: ${{env.tag}}
           files: /opt/nodogsplash-${{ matrix.target }}.zip
