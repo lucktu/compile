@@ -173,8 +173,8 @@ jobs:
         TARGET: ${{ matrix.target }}
        run: |
          # 禁用不支持musl的 TFO 或自动检测
-         sed -i 's/MHD_USE_EPOLL_INTERNALLY | MHD_USE_TCP_FASTOPEN,/MHD_USE_EPOLL_INTERNALLY,/g' src/main.c
-         cat src/main.c
+         -sed -i 's/MHD_USE_EPOLL_INTERNALLY | MHD_USE_TCP_FASTOPEN,/MHD_USE_EPOLL_INTERNALLY,/g' src/main.c
+         -cat src/main.c
          export CROSS_COMPILE=${URL}-
          make nodogsplash
          make ndsctl
