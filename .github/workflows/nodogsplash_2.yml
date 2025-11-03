@@ -14,8 +14,8 @@ on:
         type: boolean
       rel:
         description: '编译完成后是否发布Release'
-        required: true
-        default: true
+        required: false
+        default: false
         type: boolean
       tag:
         description: '指定Release的版本号（留空为源码提交哈希值）'
