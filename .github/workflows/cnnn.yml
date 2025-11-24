@@ -18,33 +18,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout lucktu/cnn2n source code
         uses: actions/checkout@v4
+        with:
+          repository: lucktu/cnn2n
+          path: n2n-source
 
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake libssl-dev zlib1g-dev
 
-      - name: Build
+      - name: Build with CMake
         run: |
+          cd n2n-source
           mkdir -p build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-          make -j$(nproc)
-
-      - name: Package binaries
-        run: |
-          mkdir -p artifacts
-          cp build/edge artifacts/edge-linux-amd64
-          cp build/supernode artifacts/supernode-linux-amd64
-          chmod +x artifacts/*
+          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ..
+          make
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-binaries
-          path: artifacts/*
+          path: n2n-source/build/edge
 
   build-windows:
     name: Build for Windows
