@@ -65,6 +65,12 @@ jobs:
         run: |
           (Get-Content CMakeLists.txt) -replace 'cmake_minimum_required\(VERSION 2\.6\)', 'cmake_minimum_required(VERSION 3.5)' | Set-Content CMakeLists.txt
 
+      - name: Fix Windows header includes
+        working-directory: source
+        shell: pwsh
+        run: |
+          $content = Get-Content include/n2n.h -Raw
+
       - name: Configure CMake
         working-directory: source
         run: |
