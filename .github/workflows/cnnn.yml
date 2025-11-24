@@ -85,42 +85,42 @@ jobs:
             source/build/Release/edge.exe
             source/build/Release/supernode.exe
 
-  build-macos:
-    name: Build for macOS
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout lucktu/cnn2n source code
-        uses: actions/checkout@v4
-        with:
-          repository: lucktu/cnn2n
-          path: source
-
-      - name: Install dependencies
-        run: |
-          brew install openssl@1.1
-
-      - name: Configure CMake
-        working-directory: source
-        run: |
-          mkdir build
-          cd build
-          cmake -G "Unix Makefiles" \
-                -DCMAKE_BUILD_TYPE=Release \
-                -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1 \
-                ..
-
-      - name: Build
-        working-directory: source/build
-        run: make -j$(sysctl -n hw.ncpu)
-
-      - name: Upload macOS binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-binaries
-          path: |
-            source/build/edge
-            source/build/supernode
+#  build-macos:
+#    name: Build for macOS
+#    runs-on: macos-latest
+#
+#    steps:
+#      - name: Checkout lucktu/cnn2n source code
+#        uses: actions/checkout@v4
+#        with:
+#          repository: lucktu/cnn2n
+#          path: source
+#
+#      - name: Install dependencies
+#        run: |
+#          brew install openssl@1.1
+#
+#      - name: Configure CMake
+#        working-directory: source
+#        run: |
+#          mkdir build
+#          cd build
+#          cmake -G "Unix Makefiles" \
+#                -DCMAKE_BUILD_TYPE=Release \
+#                -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1 \
+#                ..
+#
+#      - name: Build
+#        working-directory: source/build
+#        run: make -j$(sysctl -n hw.ncpu)
+#
+#      - name: Upload macOS binaries
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: macos-binaries
+#          path: |
+#            source/build/edge
+#            source/build/supernode
 
   release:
     name: Create Release
