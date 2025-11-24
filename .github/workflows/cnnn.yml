@@ -13,6 +13,37 @@ permissions:
   contents: write
 
 jobs:
+  build-linux:
+    name: Build for Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout lucktu/cnn2n source code
+        uses: actions/checkout@v4
+        with:
+          repository: lucktu/cnn2n
+          path: source
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libssl-dev zlib1g-dev
+
+      - name: Build with CMake
+        run: |
+          cd source
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          make edge supernode
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-binaries
+          path: |
+            source/build/edge
+            source/build/supernode
+
   build-windows:
     name: Build for Windows
     runs-on: windows-latest
