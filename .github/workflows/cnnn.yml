@@ -20,7 +20,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-	uses: softprops/action-gh-release@v1
 
       - name: Install dependencies
         run: |
